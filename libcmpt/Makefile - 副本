@@ -1,0 +1,53 @@
+PROGRAM = libcmpt
+VERSION = v20220320
+AUTHOR = denghengli
+DATE = $(shell date +%Y%m%d)
+BIN_NAME = $(PROGRAM)_$(DATE)
+CC = gcc
+
+BUILD_DIR = ./.build
+
+SRC_PATH = ./src
+INC_PATH = ./include
+LIB_SRC_PATH = ./lib/libcmpt/src
+LIB_INC_PATH = ./lib/libcmpt/include
+
+LIB_SRC_FILE = $(wildcard $(LIB_SRC_PATH)/*.c)
+SRC_FILE = $(wildcard $(SRC_PATH)/*.c)
+
+# LIB_OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$($(wildcard lib/*/src/*.c)))
+# SRC_OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(wildcard src/*.c))
+
+LIB_OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(notdir $(LIB_SRC_FILE)))
+SRC_OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(notdir $(SRC_FILE)))
+
+SRC_HEADS = $(wildcard include/*.h src/*.h)
+LIB_HEADS = $(wildcard lib/*/include/*.h lib/*/src/*.h)
+
+CFLAGS = -Wall $(patsubst %,-I%,$(LIB_INC_PATH)) $(patsubst %,-I%,$(INC_PATH))
+# LDFLAGS = -lrt -lxml2 -lsqlite3
+LDFLAGS = -lsqlite3
+
+all: $(BIN_NAME)
+
+$(BIN_NAME): $(SRC_OBJ) $(LIB_OBJ)
+	$(CC) $^ -o $@ $(LDFLAGS)
+
+$(SRC_OBJ): $(BUILD_DIR)/%.o: $(SRC_FILE) $(SRC_HEADS)
+	#$(shell mkdir -p $(BUILD_DIR))
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $(CFLAGS) -c $<
+	
+$(LIB_OBJ): $(BUILD_DIR)/%.o: $(LIB_SRC_FILE) $(LIB_HEADS)
+	#$(shell mkdir -p $(BUILD_DIR))
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $(CFLAGS) -c $<
+
+clean:
+	rm -rf $(BUILD_DIR)
+	rm -f $(PROGRAM)*
+
+.PHONY: clean all
+
+
+
